@@ -35,12 +35,18 @@ def getMagnetLink(search_query):
 
 
 def main():
+    if os.system('npm --version') != 0:
+        print 'Install NPM to use showtime'
+        exit()
+
+    if os.system('peerflix --version') != 0:
+        print 'Installing Peerflix...'
+        os.system('npm install -g peerflix')
+
     search_query = '+'.join(sys.argv[1:])
     magnet_link_for_video = getMagnetLink(search_query)
 
     print 'Starting video stream...'
-
-    print magnet_link_for_video
 
     os.system('peerflix "' + magnet_link_for_video + '" --vlc')
 
