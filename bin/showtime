@@ -14,10 +14,14 @@ def getMagnetLink(search_query):
     final_search_query = search_URL + search_query
     src = ""
 
-    print 'Connecting to server...'
+    print 'Connecting to Server...'
 
-    page = requests.get(final_search_query)
-    src = page.text
+    while len(src) <= 600:
+        page = requests.get(final_search_query)
+        src = page.text
+    
+    print 'Connected!'
+
     ob = BeautifulSoup(src, 'lxml')
 
     hyperlinks = ob.findAll('a')
@@ -31,22 +35,14 @@ def getMagnetLink(search_query):
 
 
 def main():
-    if os.system('npm --version') != 0:
-        print 'Install NPM to use showtime'
-        exit()
-
-    if os.system('peerflix --version') != 0:
-        print 'Installing Peerflix...'
-        os.system('npm install -g peerflix')
-
     search_query = '+'.join(sys.argv[1:])
     magnet_link_for_video = getMagnetLink(search_query)
 
-    if magnet_link_for_video == None:
-        print 'Torrents might be banned in you country. There is nothing we can do about it.'
-    else:
-        print 'Starting video stream...'
-        os.system('peerflix "' + magnet_link_for_video + '" --vlc')
+    print 'Starting video stream...'
+
+    print magnet_link_for_video
+
+    os.system('peerflix "' + magnet_link_for_video + '" --vlc')
 
 
 if __name__ == '__main__':
