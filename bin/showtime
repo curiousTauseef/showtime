@@ -18,7 +18,6 @@ def getMagnetLink(search_query):
 
     page = requests.get(final_search_query)
     src = page.text
-
     ob = BeautifulSoup(src, 'lxml')
 
     hyperlinks = ob.findAll('a')
