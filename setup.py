@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(name="showtime",
-	  version="0.1",
+	  version="0.11",
 	  description="Stream movies/seasons directly to your vlc",
 	  url="https://github.com/rahulxxarora/showtime",
 	  author="Rahul Arora",
