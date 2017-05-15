@@ -9,8 +9,37 @@ import requests
 from bs4 import BeautifulSoup
 
 
+def getMagnetLink(search_query):
+    search_URL = 'https://thepiratebay.org/search/'
+    final_search_query = search_URL + search_query
+    src = ""
+
+    print 'Connecting to server...'
+
+    page = requests.get(final_search_query)
+    src = page.text
+
+    ob = BeautifulSoup(src, 'lxml')
+
+    hyperlinks = ob.findAll('a')
+    for link in hyperlinks:
+        try:
+            if link['href'].startswith('magnet'):
+                return link['href']
+                break
+        except:
+            pass
+
+
 def main():
-    print 'SHOWTIME INITIALISED...'
+    search_query = '+'.join(sys.argv[1:])
+    magnet_link_for_video = getMagnetLink(search_query)
+
+    if magnet_link_for_video == None:
+        print 'Torrents might be banned in you country. There is nothing we can do about it.'
+    else:
+        print 'Starting video stream...'
+        os.system('peerflix "' + magnet_link_for_video + '" --vlc')
 
 
 if __name__ == '__main__':
