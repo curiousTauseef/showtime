@@ -37,3 +37,7 @@ $ showtime [NAME]
 ```
 $ showtime spiderman
 ```
+
+```
+$ showtime narcos S01E01
+```
