@@ -2,6 +2,7 @@
 
 # Python stuff
 import os
+import subprocess
 import sys
 
 # External libraries
@@ -33,18 +34,29 @@ def getMagnetLink(search_query):
         except:
             pass
 
+    return None
+
 
 def main():
-    if os.system('npm --version') != 0:
+    if subprocess.check_output(['npm', '--version']) == 0:
         print 'Install NPM to use showtime'
         exit()
 
-    if os.system('peerflix --version') != 0:
+    if subprocess.check_output(['peerflix', '--version']) == 0:
         print 'Installing Peerflix...'
         os.system('npm install -g peerflix')
 
     search_query = '+'.join(sys.argv[1:])
-    magnet_link_for_video = getMagnetLink(search_query)
+
+    try:
+        magnet_link_for_video = getMagnetLink(search_query)
+    except:
+        print 'Something went wrong. Please try again.'
+        exit()
+
+    if magnet_link_for_video == None:
+        print 'No video found by the given name. Try using some other name or write correctly.'
+        exit()
 
     print 'Starting video stream...'
 

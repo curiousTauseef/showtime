@@ -1,14 +1,27 @@
-# Showtime
+Showtime
+========
 
 Watch movies and seasons directly on your VLC.
 
 
-### Installation
+## WARNING: TORRENTS MIGHT BE BANNED IN YOUR COUNTRY. CONTINUE AT YOUR OWN RISK.
+
+
+Installation
+------------
+
 ```
-$ pip install showtime
+$ sudo pip install showtime
 ```
 
-### How to use?
+How to use?
+-----------
+
+```
+$ showtime [NAME]
+```
+
+#Example
 
 ```
 $ showtime spiderman
