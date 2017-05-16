@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 import re
+import time
+import threading
 
 # External libraries
 import requests
@@ -21,6 +23,7 @@ class Showtime:
     final_search_query = None # Final query formed after formatting
 
     def __init__(self):
+        os.system('rm -rf /tmp/torrent-stream/') # Clear cached content
         self.clearScreen()
         self.testRequirements()
         self.search_URL = 'https://thepiratebay.org/search/'
@@ -74,14 +77,20 @@ class Showtime:
             except:
                 pass
          
-
     def fetchInfo(self):
         self._fetchInfoFromPage()
         self._parseInfoFromPage()
 
-
     def clearScreen(self):
         os.system('clear')
+
+    def playFinalMsg(self):
+        self.clearScreen()
+        print 'Playing ' + str(self.name_of_the_video),
+        time.sleep(2)
+        print 'Sit back. Relax. Enjoy.'
+        time.sleep(2)
+        print 'It\'s\033[1m\033[91m Showtime. \033[0m'
 
     def startPeerflix(self):
         self.fetchInfo()
@@ -90,7 +99,7 @@ class Showtime:
             print 'No video found by the given name. Try using some other name or write correctly.'
             exit()
 
-        print 'Playing ' + str(self.name_of_the_video)
+        threading.Thread(target=self.playFinalMsg).start()
 
         os.system('peerflix "' + self.magnet_link_for_video + '" --vlc')        
 

@@ -32,7 +32,7 @@ How to use?
 $ showtime [NAME]
 ```
 
-#Example
+# Example
 
 ```
 $ showtime spiderman
