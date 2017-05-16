@@ -4,7 +4,18 @@ Showtime
 Watch movies and seasons directly on your VLC.
 
 
-## WARNING: TORRENTS MIGHT BE BANNED IN YOUR COUNTRY. CONTINUE AT YOUR OWN RISK.
+WARNING
+-------
+
+## TORRENTS MIGHT BE BANNED IN YOUR COUNTRY. CONTINUE AT YOUR OWN RISK.
+
+
+Guidelines
+----------
+
+You should have NPM installed on your machine. The first time you use it, it'll download some dependencies so sit back and relax for a while. 
+
+If the search doesn't work, try using `sudo`
 
 
 Installation
