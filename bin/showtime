@@ -18,9 +18,14 @@ class Showtime:
     search_URL = None # URL Of the Torrent
     search_query = None # Input by the user
     magnet_link_for_video = None # Link for the video to stream content
+    list_magnet_link_for_video = [] # Links for the videos to stream content
+    list_size_of_video = [] # Sizes for the videos to stream content
     name_of_the_video = None # Title of the content
     src = None # Src of the scraped page
     final_search_query = None # Final query formed after formatting
+    choice = False # To find whether --choice flag is used or not
+    choice_input = '' # Store choice of user in --choice mode
+    pos_of_season = -1
 
     def __init__(self):
         os.system('rm -rf /tmp/torrent-stream/') # Clear cached content
@@ -30,12 +35,19 @@ class Showtime:
         self.getInput()
 
     def getInput(self):
-        if re.match('s[0-9]+e[0-9]+', sys.argv[-1]):
-            _upperCasedName = sys.argv[-1].upper()
-            self.search_query = '+'.join(sys.argv[1:-1])
+        if '--choice' in sys.argv:
+            self.choice = True
+            self.pos_of_season = -2
+
+        if re.match('s[0-9]+e[0-9]+', sys.argv[self.pos_of_season]):
+            _upperCasedName = sys.argv[self.pos_of_season].upper()
+            self.search_query = '+'.join(sys.argv[1:self.pos_of_season])
             self.search_query = self.search_query + '+' + _upperCasedName
         else:
-            self.search_query = '+'.join(sys.argv[1:])
+            if self.choice:
+                self.search_query = '+'.join(sys.argv[1:-1])
+            else:
+                self.search_query = '+'.join(sys.argv[1:])
 
         self.final_search_query = self.search_URL + self.search_query
 
@@ -67,13 +79,20 @@ class Showtime:
     def _parseInfoFromPage(self):
         ob = BeautifulSoup(self.src, 'lxml')
 
-        self.name_of_the_video = ob.find('div', {'class':'detName'}).text
+        if self.choice:
+            self.name_of_the_video = ob.findAll('div', {'class':'detName'})
+            self.list_size_of_video = ob.findAll('font', {'class':'detDesc'})
+        else:
+            self.name_of_the_video = ob.find('div', {'class':'detName'}).text
         hyperlinks = ob.findAll('a')
         for link in hyperlinks:
             try:
                 if link['href'].startswith('magnet'):
-                    self.magnet_link_for_video = link['href']
-                    return
+                    if self.choice:
+                        (self.list_magnet_link_for_video).append(link['href'])
+                    else:
+                        self.magnet_link_for_video = link['href']
+                        return
             except:
                 pass
          
@@ -86,7 +105,10 @@ class Showtime:
 
     def playFinalMsg(self):
         self.clearScreen()
-        print 'Playing ' + str(self.name_of_the_video),
+        if self.choice:
+            print 'Playing ' + self.name_of_the_video[int(self.choice_input)-1].text,
+        else:
+            print 'Playing ' + str(self.name_of_the_video),
         time.sleep(2)
         print 'Sit back. Relax. Enjoy.'
         time.sleep(2)
@@ -95,13 +117,29 @@ class Showtime:
     def startPeerflix(self):
         self.fetchInfo()
 
-        if self.magnet_link_for_video == None:
-            print 'No video found by the given name. Try using some other name or write correctly.'
-            exit()
+        if self.choice:
+            self.clearScreen()
+            print 'The titles are in the decreasing order of seeds.\n\n'
+            _ctr = 1
+            for name, size in zip(self.name_of_the_video, self.list_size_of_video):
+                print str(_ctr) + '. ' + name.text.rstrip() + ' |' + size.text.split(',')[1]
+                _ctr += 1
+            self.choice_input = raw_input('Enter your choice : ')
 
-        threading.Thread(target=self.playFinalMsg).start()
+            if self.choice_input == '':
+                self.choice_input = '1'
+            
+            threading.Thread(target=self.playFinalMsg).start()
 
-        os.system('peerflix "' + self.magnet_link_for_video + '" --vlc')        
+            os.system('peerflix "' + self.list_magnet_link_for_video[int(self.choice_input)] + '" --vlc')
+        else:
+            if self.magnet_link_for_video == None:
+                print 'No video found by the given name. Try using some other name or write correctly.'
+                exit()
+
+            threading.Thread(target=self.playFinalMsg).start()
+
+            os.system('peerflix "' + self.magnet_link_for_video + '" --vlc')        
 
 
 def main():

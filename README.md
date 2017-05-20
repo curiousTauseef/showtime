@@ -41,3 +41,14 @@ $ showtime spiderman
 ```
 $ showtime narcos S01E01
 ```
+
+Arguments
+---------
+
+# --choice
+
+This flag will give users top choices to select from without automatically playing the best one.
+
+`showtime narcos S01E01 --choice`
+
+`showtime civil war --choice`
