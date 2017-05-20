@@ -130,6 +130,11 @@ class Showtime:
 
             if self.choice_input == '':
                 self.choice_input = '1'
+
+            if int(self.choice_input) >= _ctr or int(self.choice_input) < 1:
+                self.clearScreen()
+                print 'Incorrect choice. Please try again.'
+                exit()
             
             threading.Thread(target=self.playFinalMsg).start()
 
@@ -146,12 +151,7 @@ class Showtime:
 
 def main():
     ob = Showtime()
-    try:
-        ob.startPeerflix()
-    except:
-        ob.clearScreen()
-        print 'Something went wrong. Please try again.'
-        exit()
+    ob.startPeerflix()
 
 
 if __name__ == '__main__':
