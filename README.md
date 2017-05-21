@@ -17,6 +17,8 @@ You should have NPM installed on your machine. The first time you use it, it'll 
 
 If the search doesn't work, try using `sudo`
 
+Note: Works best with good internet connection.
+
 
 Installation
 ------------
