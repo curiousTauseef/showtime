@@ -120,13 +120,18 @@ class Showtime:
 
         if self.choice:
             self.clearScreen()
-            print 'The titles are in the decreasing order of seeds.\n\n'
+
+            if len(self.name_of_the_video) == 0:
+                print 'No video found by the given name. Try using some other name or write correctly.'
+                exit()
+
+            print 'The titles are in the decreasing order of seeds.\n'
             _ctr = 1
             for name, size in zip(self.name_of_the_video, self.list_size_of_video):
                 size = unicodedata.normalize('NFKD', size.text.split(',')[1]).encode('ascii','ignore')
                 print '%2s' % str(_ctr) + '. ' + name.text.rstrip() + ' |' + size
                 _ctr += 1
-            self.choice_input = raw_input('Enter your choice : ')
+            self.choice_input = raw_input('\nEnter your choice (default 1) : ')
 
             if self.choice_input == '':
                 self.choice_input = '1'
