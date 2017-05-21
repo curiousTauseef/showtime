@@ -15,25 +15,34 @@ import urllib, urllib2
 from bs4 import BeautifulSoup
 
 
+# Global declarations
+ob = None
+
+def cleanUpCode():
+    print '[WIP] Video is being copied to your root folder'
+
+
 class Showtime:
 
     search_URL = None # URL Of the Torrent
     search_query = None # Input by the user
+    final_search_query = None # Final query formed after formatting
+
     magnet_link_for_video = None # Link for the video to stream content
+    name_of_the_video = None # Title of the content
     list_magnet_link_for_video = [] # Links for the videos to stream content
     list_size_of_video = [] # Sizes for the videos to stream content
-    name_of_the_video = None # Title of the content
+
     src = None # Src of the scraped page
-    final_search_query = None # Final query formed after formatting
-    choice = False # To find whether --choice flag is used or not
     choice_input = '' # Store choice of user in --choice mode
-    google_address = None # Fetches google address for improving the query
-    google_request = None # For requesting the google with user agent
-    google_page = None # Stores the output of google search
+
     improved_search_query = None # Improves the wrong search
     improve_option = None # check whether user wants to improve or not
     pos_of_season = -1
-    user_agent_google = {'User-Agent':'Mosilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11'}
+    
+    choice = False # To find whether --choice flag is used or not
+    save = False # To find whether --save flag is used or not
+    flags = False # Indicate whether any flag is included not
 
     def __init__(self):
         os.system('rm -rf /tmp/torrent-stream/') # Clear cached content
@@ -42,20 +51,30 @@ class Showtime:
         self.search_URL = 'https://thepiratebay.org/search/'
         self.getInput()
 
+    def checkSaveFlag(self):
+        return self.save
+
     def getInput(self):
         if '--choice' in sys.argv:
             self.choice = True
-            self.pos_of_season = -2
+            self.flags = True
 
-        if re.match('s[0-9]+e[0-9]+', sys.argv[self.pos_of_season]):
-            _upperCasedName = sys.argv[self.pos_of_season].upper()
-            self.search_query = '+'.join(sys.argv[1:self.pos_of_season])
+        if '--save' in sys.argv:
+            self.save = True
+            self.flags = True
+
+        if self.flags:
+            for _name in reversed(sys.argv):
+                if _name.startswith('--'):
+                    sys.argv.pop()
+
+        if re.match('s[0-9]+e[0-9]+', sys.argv[-1]):
+            _upperCasedName = sys.argv[-1].upper()
+
+            self.search_query = '+'.join(sys.argv[1:-1])
             self.search_query = self.search_query + '+' + _upperCasedName
         else:
-            if self.choice:
-                self.search_query = '+'.join(sys.argv[1:-1])
-            else:
-                self.search_query = '+'.join(sys.argv[1:])
+            self.search_query = '+'.join(sys.argv[1:])
 
         self.final_search_query = self.search_URL + self.search_query
 
@@ -82,17 +101,21 @@ class Showtime:
             page = requests.get(self.final_search_query)
             self.src = page.text
         
-        print 'Connected!'   
+        print 'Connected!'  
+        time.sleep(0.5) 
 
     def _parseInfoFromPage(self):
-        self.google_scrape()
         ob = BeautifulSoup(self.src, 'lxml')
 
         if self.choice:
             self.name_of_the_video = ob.findAll('div', {'class':'detName'})
             self.list_size_of_video = ob.findAll('font', {'class':'detDesc'})
         else:
-            self.name_of_the_video = ob.find('div', {'class':'detName'}).text
+            try:
+                self.name_of_the_video = ob.find('div', {'class':'detName'}).text
+            except:
+                self.name_of_the_video = None
+
         hyperlinks = ob.findAll('a')
         for link in hyperlinks:
             try:
@@ -113,21 +136,32 @@ class Showtime:
         os.system('clear')
 
     def google_scrape(self):
-        self.google_address = "http://www.google.com/search?q=%s&num=100&hl=en&start=0" % (urllib.quote_plus(self.search_query))
-        self.google_request = urllib2.Request(self.google_address, None, self.user_agent_google)
-        self.google_page = urllib2.urlopen(self.google_request).read()
-        soup = BeautifulSoup(self.google_page, 'lxml')
-        self.improved_search_query = soup.find('a', attrs={'class':'spell'}).text
+        google_address = "http://www.google.com/search?q=%s&num=100&hl=en&start=0" % (urllib.quote_plus(self.search_query))
+        user_agent_google = {'User-Agent':'Mosilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11'}
+        google_request = urllib2.Request(google_address, None, user_agent_google)
+        google_page = urllib2.urlopen(google_request).read()
+        soup = BeautifulSoup(google_page, 'lxml')
+        self.search_query = soup.find('a', attrs={'class':'spell'}).text
         self.check_improved_results()
 
     def check_improved_results(self):
-        print self.improved_search_query
-        if self.improved_search_query:
+        if self.search_query:
             self.clearScreen()
-            print 'Did you mean : ' + self.improved_search_query
-            print 'No video found by the given name. Try using some other name or write correctly.'            
+            if "+" in self.search_query:
+                print 'Did you mean : ' + ' '.join(self.search_query.split("+"))
+            else:
+                print 'Did you mean : ' + self.search_query
+            self.improve_option = raw_input('y/n:')
+            check_list = ['y', 'Y', 'yes', 'Yes', 'YES']
+            if self.improve_option in check_list:
+                self.final_search_query = self.search_URL + self.search_query
+                self.clearScreen()
+                self.startPeerflix()
+            else:
+                print 'No video found by the given name. Try using some other name or write correctly.' 
+                exit()           
         else:
-            print 'No suggestions found. Try using some other name or write correctly.'
+            print 'No video found by the given name. Try using some other name or write correctly.' 
             exit()
 
     def playFinalMsg(self):
@@ -146,13 +180,18 @@ class Showtime:
 
         if self.choice:
             self.clearScreen()
-            print 'The titles are in the decreasing order of seeds.\n\n'
+
+            if len(self.list_magnet_link_for_video) == 0:
+                self.google_scrape()
+                exit()
+
+            print 'The titles are in the decreasing order of seeds.\n'
             _ctr = 1
             for name, size in zip(self.name_of_the_video, self.list_size_of_video):
                 size = unicodedata.normalize('NFKD', size.text.split(',')[1]).encode('ascii','ignore')
                 print '%2s' % str(_ctr) + '. ' + name.text.rstrip() + ' |' + size
                 _ctr += 1
-            self.choice_input = raw_input('Enter your choice : ')
+            self.choice_input = raw_input('\nEnter your choice (default 1) : ')
 
             if self.choice_input == '':
                 self.choice_input = '1'
@@ -176,9 +215,22 @@ class Showtime:
 
 
 def main():
+    global ob
+
     ob = Showtime()
     ob.startPeerflix()
 
+    if ob.checkSaveFlag():
+        cleanUpCode()
+
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        try: # In case ob isn't initialized yet
+            if ob.checkSaveFlag():
+                cleanUpCode()
+        except:
+            pass
+        exit()
