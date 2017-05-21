@@ -11,7 +11,6 @@ import unicodedata
 
 # External libraries
 import requests
-import urllib, urllib2
 from bs4 import BeautifulSoup
 
 
@@ -102,7 +101,6 @@ class Showtime:
             self.src = page.text
         
         print 'Connected!'  
-        time.sleep(0.5) 
 
     def _parseInfoFromPage(self):
         ob = BeautifulSoup(self.src, 'lxml')
@@ -136,33 +134,35 @@ class Showtime:
         os.system('clear')
 
     def google_scrape(self):
-        google_address = "http://www.google.com/search?q=%s&num=100&hl=en&start=0" % (urllib.quote_plus(self.search_query))
-        user_agent_google = {'User-Agent':'Mosilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11'}
-        google_request = urllib2.Request(google_address, None, user_agent_google)
-        google_page = urllib2.urlopen(google_request).read()
-        soup = BeautifulSoup(google_page, 'lxml')
-        self.search_query = soup.find('a', attrs={'class':'spell'}).text
+        google_address = "http://www.google.com/search?q={query}&num=100&hl=en&start=0".format(query=self.search_query)
+        google_page = requests.get(google_address)
+        soup = BeautifulSoup(google_page.content, 'lxml')
+        try:
+            self.improved_search_query = soup.find('a', attrs={'class':'spell'}).text
+            if self.improved_search_query:
+                self.clearScreen()
+                if "+" in self.improved_search_query:
+                    print 'Did you mean : ' + ' '.join(self.improved_search_query.split("+"))
+                else:
+                    print 'Did you mean : ' + self.improved_search_query
+            else:
+                print 'No video found by the given name. Try using some other name or write correctly.' 
+                exit()
+        except:
+            print 'No video found by the given name. Try using some other name or write correctly.' 
+            exit()
         self.check_improved_results()
 
     def check_improved_results(self):
-        if self.search_query:
+        self.improve_option = raw_input('y/n:')
+        check_list = ['y', 'Y', 'yes', 'Yes', 'YES']
+        if self.improve_option in check_list:
+            self.final_search_query = self.search_URL + self.improved_search_query
             self.clearScreen()
-            if "+" in self.search_query:
-                print 'Did you mean : ' + ' '.join(self.search_query.split("+"))
-            else:
-                print 'Did you mean : ' + self.search_query
-            self.improve_option = raw_input('y/n:')
-            check_list = ['y', 'Y', 'yes', 'Yes', 'YES']
-            if self.improve_option in check_list:
-                self.final_search_query = self.search_URL + self.search_query
-                self.clearScreen()
-                self.startPeerflix()
-            else:
-                print 'No video found by the given name. Try using some other name or write correctly.' 
-                exit()           
+            self.startPeerflix()
         else:
             print 'No video found by the given name. Try using some other name or write correctly.' 
-            exit()
+            exit()           
 
     def playFinalMsg(self):
         self.clearScreen()
