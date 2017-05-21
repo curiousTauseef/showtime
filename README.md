@@ -52,3 +52,12 @@ This flag will give users top choices to select from without automatically playi
 `showtime narcos S01E01 --choice`
 
 `showtime civil war --choice`
+
+
+# --save
+
+This flag will save the downloaded content to the root directory.
+
+`showtime narcos S01E01 --save`
+
+`showtime civil war --choice --save`
