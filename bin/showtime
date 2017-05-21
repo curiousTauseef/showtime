@@ -14,19 +14,31 @@ import requests
 from bs4 import BeautifulSoup
 
 
+# Global declarations
+ob = None
+
+
+def cleanUpCode():
+    print '[WIP] Video is being copied to your root folder'
+
+
 class Showtime:
 
     search_URL = None # URL Of the Torrent
     search_query = None # Input by the user
+    final_search_query = None # Final query formed after formatting
+
     magnet_link_for_video = None # Link for the video to stream content
+    name_of_the_video = None # Title of the content
     list_magnet_link_for_video = [] # Links for the videos to stream content
     list_size_of_video = [] # Sizes for the videos to stream content
-    name_of_the_video = None # Title of the content
+
     src = None # Src of the scraped page
-    final_search_query = None # Final query formed after formatting
-    choice = False # To find whether --choice flag is used or not
     choice_input = '' # Store choice of user in --choice mode
-    pos_of_season = -1
+
+    choice = False # To find whether --choice flag is used or not
+    save = False # To find whether --save flag is used or not
+    flags = False # Indicate whether any flag is included not
 
     def __init__(self):
         os.system('rm -rf /tmp/torrent-stream/') # Clear cached content
@@ -35,20 +47,30 @@ class Showtime:
         self.search_URL = 'https://thepiratebay.org/search/'
         self.getInput()
 
+    def checkSaveFlag(self):
+        return self.save
+
     def getInput(self):
         if '--choice' in sys.argv:
             self.choice = True
-            self.pos_of_season = -2
+            self.flags = True
 
-        if re.match('s[0-9]+e[0-9]+', sys.argv[self.pos_of_season]):
-            _upperCasedName = sys.argv[self.pos_of_season].upper()
-            self.search_query = '+'.join(sys.argv[1:self.pos_of_season])
+        if '--save' in sys.argv:
+            self.save = True
+            self.flags = True
+
+        if self.flags:
+            for _name in reversed(sys.argv):
+                if _name.startswith('--'):
+                    sys.argv.pop()
+
+        if re.match('s[0-9]+e[0-9]+', sys.argv[-1]):
+            _upperCasedName = sys.argv[-1].upper()
+
+            self.search_query = '+'.join(sys.argv[1:-1])
             self.search_query = self.search_query + '+' + _upperCasedName
         else:
-            if self.choice:
-                self.search_query = '+'.join(sys.argv[1:-1])
-            else:
-                self.search_query = '+'.join(sys.argv[1:])
+            self.search_query = '+'.join(sys.argv[1:])
 
         self.final_search_query = self.search_URL + self.search_query
 
@@ -84,7 +106,11 @@ class Showtime:
             self.name_of_the_video = ob.findAll('div', {'class':'detName'})
             self.list_size_of_video = ob.findAll('font', {'class':'detDesc'})
         else:
-            self.name_of_the_video = ob.find('div', {'class':'detName'}).text
+            try:
+                self.name_of_the_video = ob.find('div', {'class':'detName'}).text
+            except:
+                self.name_of_the_video = None
+
         hyperlinks = ob.findAll('a')
         for link in hyperlinks:
             try:
@@ -155,9 +181,22 @@ class Showtime:
 
 
 def main():
+    global ob
+
     ob = Showtime()
     ob.startPeerflix()
 
+    if ob.checkSaveFlag():
+        cleanUpCode()
+
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        try: # In case ob isn't initialized yet
+            if ob.checkSaveFlag():
+                cleanUpCode()
+        except:
+            pass
+        sys.exit()
