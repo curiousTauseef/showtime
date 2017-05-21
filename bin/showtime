@@ -11,6 +11,7 @@ import unicodedata
 
 # External libraries
 import requests
+import urllib, urllib2
 from bs4 import BeautifulSoup
 
 
@@ -26,7 +27,13 @@ class Showtime:
     final_search_query = None # Final query formed after formatting
     choice = False # To find whether --choice flag is used or not
     choice_input = '' # Store choice of user in --choice mode
+    google_address = None # Fetches google address for improving the query
+    google_request = None # For requesting the google with user agent
+    google_page = None # Stores the output of google search
+    improved_search_query = None # Improves the wrong search
+    improve_option = None # check whether user wants to improve or not
     pos_of_season = -1
+    user_agent_google = {'User-Agent':'Mosilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11'}
 
     def __init__(self):
         os.system('rm -rf /tmp/torrent-stream/') # Clear cached content
@@ -78,6 +85,7 @@ class Showtime:
         print 'Connected!'   
 
     def _parseInfoFromPage(self):
+        self.google_scrape()
         ob = BeautifulSoup(self.src, 'lxml')
 
         if self.choice:
@@ -103,6 +111,24 @@ class Showtime:
 
     def clearScreen(self):
         os.system('clear')
+
+    def google_scrape(self):
+        self.google_address = "http://www.google.com/search?q=%s&num=100&hl=en&start=0" % (urllib.quote_plus(self.search_query))
+        self.google_request = urllib2.Request(self.google_address, None, self.user_agent_google)
+        self.google_page = urllib2.urlopen(self.google_request).read()
+        soup = BeautifulSoup(self.google_page, 'lxml')
+        self.improved_search_query = soup.find('a', attrs={'class':'spell'}).text
+        self.check_improved_results()
+
+    def check_improved_results(self):
+        print self.improved_search_query
+        if self.improved_search_query:
+            self.clearScreen()
+            print 'Did you mean : ' + self.improved_search_query
+            print 'No video found by the given name. Try using some other name or write correctly.'            
+        else:
+            print 'No suggestions found. Try using some other name or write correctly.'
+            exit()
 
     def playFinalMsg(self):
         self.clearScreen()
@@ -141,7 +167,7 @@ class Showtime:
             os.system('peerflix "' + self.list_magnet_link_for_video[int(self.choice_input)] + '" --vlc')
         else:
             if self.magnet_link_for_video == None:
-                print 'No video found by the given name. Try using some other name or write correctly.'
+                self.google_scrape()
                 exit()
 
             threading.Thread(target=self.playFinalMsg).start()
