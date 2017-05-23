@@ -39,6 +39,7 @@ class Showtime:
 
     src = None # Src of the scraped page
     choice_input = '' # Store choice of user in --choice mode
+    connected = False
 
     improved_search_query = None # Improves the wrong search
     improve_option = None # check whether user wants to improve or not
@@ -104,7 +105,9 @@ class Showtime:
             page = requests.get(self.final_search_query)
             self.src = page.text
         
-        print 'Connected!'  
+        print 'Connected!'
+
+        self.connected = True
 
     def _parseInfoFromPage(self):
         ob = BeautifulSoup(self.src, 'lxml')
@@ -129,8 +132,17 @@ class Showtime:
                         return
             except:
                 pass
-         
+        
+    def connectionTimeoutCheck(self):
+        for seconds in range(30):
+            time.sleep(1)
+
+        if self.connected == False:
+            print 'Connection Timeout!'
+            os._exit(1)
+
     def fetchInfo(self):
+        threading.Thread(target=self.connectionTimeoutCheck).start()
         self._fetchInfoFromPage()
         self._parseInfoFromPage()
 
